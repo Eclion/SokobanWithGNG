@@ -143,6 +143,7 @@ void jouer(SDL_Surface* ecran)
 		position.y = positionJoueur.y * TAILLE_BLOC;
 		Position newPosition(positionJoueur.x,positionJoueur.y);
 		positionMemory.push_back(&newPosition);
+		cout << newPosition.GetX() << ";" << newPosition.GetY() << endl;  
 		SDL_BlitSurface(marioActuel, NULL, ecran, &position);
 
 
