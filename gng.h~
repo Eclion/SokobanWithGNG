@@ -1,9 +1,0 @@
-
-
-#ifndef DEF_GNG
-#define DEF_GNG
-
-	void addGNGPoint(int carteGNG[][NB_BLOCS_HAUTEUR], int x, int y);
-	int maxErrorNeighbour(first);
-	node between(Node* n1, Node* n2);
-#endif
