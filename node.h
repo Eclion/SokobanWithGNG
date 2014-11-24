@@ -1,7 +1,7 @@
 #ifndef DEF_NODE
 #define DEF_NODE
 
-#include <list>
+#include <vector>
 
 using namespace std;
 
@@ -14,14 +14,18 @@ class Node
 		virtual ~Node();
 		float maxErrorNeighbour();
 		Node & operator= (const Node & other);
-		int getX(),getY();
+		int getX();
+		int getY();
+		float getError();
 		void addNeigbour(Node* n);
+		int distanceWith(Node* n);
 
 	private:
 		int _x,_y;
 		float _error;
-		list<Node*> neighbours;
+		vector<Node*> neighbours;
 };
 
+vector<Node*> findClosests(Node* n);
 
 #endif

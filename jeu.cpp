@@ -16,6 +16,10 @@ Rôle : fonctions du jeu.
 #include "jeu.h"
 #include "fichiers.h"
 #include "Position.h"
+
+#include "node.h"
+//#include "edge.h"
+
 #include <vector>
 
 void jouer(SDL_Surface* ecran)
@@ -28,6 +32,10 @@ void jouer(SDL_Surface* ecran)
 
 	int continuer = 1, objectifsRestants = 0, i = 0, j = 0;
 	int carte[NB_BLOCS_LARGEUR][NB_BLOCS_HAUTEUR] = {0};
+	int carteGNG[NB_BLOCS_LARGEUR][NB_BLOCS_HAUTEUR] = {0};
+
+	vector<Node*> _nodes;
+	vector<Edge*> _edges;
 
 	// Chargement des sprites (décors, personnage...)
 	mur = IMG_Load("mur.jpg");
@@ -79,18 +87,22 @@ void jouer(SDL_Surface* ecran)
 					case SDLK_UP:
 						marioActuel = mario[HAUT];
 						deplacerJoueur(carte, &positionJoueur, HAUT);
+						//updateGNG(&positionJoueur, _nodes, _edges);
 						break;
 					case SDLK_DOWN:
 						marioActuel = mario[BAS];
 						deplacerJoueur(carte, &positionJoueur, BAS);
+						//updateGNG(&positionJoueur, _nodes, _edges);
 						break;
 					case SDLK_RIGHT:
 						marioActuel = mario[DROITE];
 						deplacerJoueur(carte, &positionJoueur, DROITE);
+						//updateGNG(&positionJoueur, _nodes, _edges);
 						break;
 					case SDLK_LEFT:
 						marioActuel = mario[GAUCHE];
 						deplacerJoueur(carte, &positionJoueur, GAUCHE);
+						//updateGNG(&positionJoueur, _nodes, _edges);
 						break;
 					default:
 						break;
@@ -258,3 +270,10 @@ void deplacerCaisse(int *premiereCase, int *secondeCase)
 	}
 }
 
+void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
+	Node* newNode = new Node(pos->x,pos->y);
+	if(nodes.size() <= 1) nodes.push_back(newNode);
+	if(nodes.size() == 2) edges.push_back(new Edge(nodes[1],nodes[2]));
+	vector<Node*> twoFirsts = findClosests(newNode);
+
+}

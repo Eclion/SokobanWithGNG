@@ -1,9 +1,9 @@
 #include "node.h"
 
-#include <list>
+#include <vector>
 
 Node::Node(){
-	Node(0,0,0.0f);
+	Node(-100,-100,0.0f);
 }
 
 Node::Node(Node* n){
@@ -23,7 +23,12 @@ Node::~Node(){
 }
 
 float Node::maxErrorNeighbour(){
-	
+	int maxErrorNeighbourIndex = 0;
+	for(int i=0; i < neighbours.size(); i++){
+		if(neighbours[maxErrorNeighbourIndex]->getError() < neighbours[i]->getError()){
+			maxErrorNeighbourIndex = i;
+		}
+	}
 }
 
 void Node::addNeigbour(Node* n){
@@ -36,6 +41,10 @@ int Node::getX(){
 
 int Node::getY(){
 	return this->_y;
+}
+
+float Node::getError(){
+	return this->_error;
 }
 
 Node & Node::operator= (const Node & other){
@@ -55,12 +64,23 @@ Node* between(Node* n1, Node* n2){
 			0);
 }
 
-/*void findClosests(int x, int y, int z, List<Node> lNode, List<Node> & closestNodes){
+int Node::distanceWith(Node* n){
+	int d = ((this->getX() - n->getX())² + (this->getY() - n->getY())²);
+	return d;
+}
 
-}*/
-
-
-
-
-
-
+vector<Node*> findClosests(Node* n, vector<Node*> nodes){
+/*	Node* first = new Node();
+	Node* second = new Node();
+	Node* tmp = new Node();
+	for(int i=0; i<nodes.size();i++){
+		if(n->distanceWith(second) < n->distanceWith(nodes[i])){
+			second=nodes[i];
+			if(n->distanceWith(first) < n->distanceWith(second)){
+				tmp = first;
+				first = second;
+				second = tmp;
+			}
+		}
+	}*/
+}
