@@ -18,7 +18,7 @@ Rôle : fonctions du jeu.
 #include "Position.h"
 
 #include "node.h"
-//#include "edge.h"
+#include "draw.h"
 
 #include <vector>
 
@@ -32,10 +32,10 @@ void jouer(SDL_Surface* ecran)
 
 	int continuer = 1, objectifsRestants = 0, i = 0, j = 0;
 	int carte[NB_BLOCS_LARGEUR][NB_BLOCS_HAUTEUR] = {0};
-	int carteGNG[NB_BLOCS_LARGEUR][NB_BLOCS_HAUTEUR] = {0};
 
 	vector<Node*> _nodes;
 	vector<Edge*> _edges;
+	int mx=0, my=0;
 
 	// Chargement des sprites (décors, personnage...)
 	mur = IMG_Load("mur.jpg");
@@ -70,6 +70,7 @@ void jouer(SDL_Surface* ecran)
 	// Activation de la répétition des touches
 	SDL_EnableKeyRepeat(100, 100);
 
+	Uint32 start;
 	while (continuer)
 	{
 		SDL_WaitEvent(&event);
@@ -87,26 +88,31 @@ void jouer(SDL_Surface* ecran)
 					case SDLK_UP:
 						marioActuel = mario[HAUT];
 						deplacerJoueur(carte, &positionJoueur, HAUT);
-						//updateGNG(&positionJoueur, _nodes, _edges);
+						updateGNG(&positionJoueur, _nodes, _edges);
 						break;
 					case SDLK_DOWN:
 						marioActuel = mario[BAS];
 						deplacerJoueur(carte, &positionJoueur, BAS);
-						//updateGNG(&positionJoueur, _nodes, _edges);
+						updateGNG(&positionJoueur, _nodes, _edges);
 						break;
 					case SDLK_RIGHT:
 						marioActuel = mario[DROITE];
 						deplacerJoueur(carte, &positionJoueur, DROITE);
-						//updateGNG(&positionJoueur, _nodes, _edges);
+						updateGNG(&positionJoueur, _nodes, _edges);
 						break;
 					case SDLK_LEFT:
 						marioActuel = mario[GAUCHE];
 						deplacerJoueur(carte, &positionJoueur, GAUCHE);
-						//updateGNG(&positionJoueur, _nodes, _edges);
+						updateGNG(&positionJoueur, _nodes, _edges);
 						break;
 					default:
 						break;
 				}
+				break;
+
+			case SDL_MOUSEMOTION:
+				mx=event.motion.x;
+				my=event.motion.y;
 				break;
 			default:
 				break;
@@ -143,6 +149,13 @@ void jouer(SDL_Surface* ecran)
 					default:
 						break;
 				}
+
+				if(carte[i][j]!=0){
+					//placement du mur sur la partie gng
+					position.x = TAILLE_BLOC*(NB_BLOCS_LARGEUR+1+i);
+					SDL_BlitSurface(mur, NULL, ecran, &position);	
+				}
+				
 			}
 		}
 
@@ -155,12 +168,32 @@ void jouer(SDL_Surface* ecran)
 		position.y = positionJoueur.y * TAILLE_BLOC;
 		Position newPosition(positionJoueur.x,positionJoueur.y);
 		positionMemory.push_back(&newPosition);
-		cout << newPosition.GetX() << ";" << newPosition.GetY() << endl;  
+		//cout << newPosition.GetX() << ";" << newPosition.GetY() << endl;  
 		SDL_BlitSurface(marioActuel, NULL, ecran, &position);
 
-
+		//drawLine(ecran,mx,my,LARGEUR_FENETRE/2,HAUTEUR_FENETRE/2);
+		//drawPoint(ecran,LARGEUR_FENETRE/2,HAUTEUR_FENETRE/2,10);
+		if(!_nodes.empty()){
+			for(int i =0; i<_nodes.size();i++){
+				drawPoint(ecran,
+						(NB_BLOCS_LARGEUR + 1 + _nodes[i]->getX()+0.5)*TAILLE_BLOC,
+						(_nodes[i]->getY()+0.5)*TAILLE_BLOC,
+						9);
+			}
+		}
+		if(!_edges.empty()){
+			for(int i =0; i<_edges.size();i++){
+				drawLine(ecran,
+						(NB_BLOCS_LARGEUR + 1 + _edges[i]->getNode(0)->getX()+0.5)*TAILLE_BLOC,
+						(_edges[i]->getNode(0)->getY()+0.5)*TAILLE_BLOC,
+						(NB_BLOCS_LARGEUR + 1 + _edges[i]->getNode(1)->getX()+0.5)*TAILLE_BLOC,
+						(_edges[i]->getNode(1)->getY()+0.5)*TAILLE_BLOC,
+						9);
+			}
+		}
 
 		SDL_Flip(ecran);
+
 	}
 
 	// Désactivation de la répétition des touches (remise à 0)
@@ -271,9 +304,42 @@ void deplacerCaisse(int *premiereCase, int *secondeCase)
 }
 
 void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
-	Node* newNode = new Node(pos->x,pos->y);
-	if(nodes.size() <= 1) nodes.push_back(newNode);
-	if(nodes.size() == 2) edges.push_back(new Edge(nodes[1],nodes[2]));
-	vector<Node*> twoFirsts = findClosests(newNode);
+	//Node* newNode = new Node(pos->x,pos->y);
+	Node* newNode = findNode(nodes,pos->x,pos->y);
 
+	//chercher la correspondace avec les autres nodes
+
+	if(nodes.empty()) nodes.push_back(newNode);
+	else if(nodes.size() == 1){
+		nodes.push_back(newNode);
+		edges.push_back(new Edge(nodes[0],nodes[1]));
+	}
+	else{
+		newNode->setClosests(nodes);
+		edges.push_back(new Edge(newNode->getClosest(0),newNode->getClosest(1)));
+		newNode->getClosest(0)->addError(newNode->distanceWith(newNode->getClosest(0)));
+		
+		//	Attract first toward (x,y)
+
+		for(int i = 0; i< edges.size();i++){
+			edges[i]->addAge(1);
+			if(edges[i]->getAge() > MAX_AGE) edges.erase(edges.begin()+i);
+		}
+
+		// Attract neighbours(first) toward (x,y)
+
+		for(int i =0; i< nodes.size();i++){
+			nodes[i]->addError(-ERROR_DECAY);
+		}
+
+		if(newNode->getClosest(0)->getError() > MAX_ERROR){
+			Node* maxErrNei = newNode->maxErrorNeighbour();
+			/*Node* newN = between(newNode->getClosest(0),maxErrNei);
+			newNode->getClosest(0)->addError(-newNode->getClosest(0)->getError()/2);
+			maxErrNei->addError(-maxErrNei->getError()/2);
+			float newError = newNode->getClosest(0)->getError()+maxErrNei->getError();
+			newN->addError(newError);
+			nodes.push_back(newN);/**/
+		}
+	}
 }

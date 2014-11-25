@@ -1,10 +1,11 @@
 #include "node.h"
 
 #include <vector>
+#include <iostream>
 
-Node::Node(){
-	Node(-100,-100,0.0f);
-}
+/*Node::Node(){
+	Node(0,0,0.0f);
+}*/
 
 Node::Node(Node* n){
 	_x=n->_x;
@@ -22,13 +23,18 @@ Node::~Node(){
 
 }
 
-float Node::maxErrorNeighbour(){
+Node* Node::maxErrorNeighbour(){
 	int maxErrorNeighbourIndex = 0;
+	if(neighbours.empty()){
+		cout<<"vide"<<endl;
+		return (new Node());
+	}
 	for(int i=0; i < neighbours.size(); i++){
 		if(neighbours[maxErrorNeighbourIndex]->getError() < neighbours[i]->getError()){
 			maxErrorNeighbourIndex = i;
 		}
 	}
+	return neighbours[maxErrorNeighbourIndex];
 }
 
 void Node::addNeigbour(Node* n){
@@ -65,22 +71,45 @@ Node* between(Node* n1, Node* n2){
 }
 
 int Node::distanceWith(Node* n){
-	int d = ((this->getX() - n->getX())² + (this->getY() - n->getY())²);
+	int d = ((this->getX() - n->getX())*(this->getX() - n->getX()) + (this->getY() - n->getY())*(this->getY() - n->getY()));
 	return d;
 }
 
-vector<Node*> findClosests(Node* n, vector<Node*> nodes){
-/*	Node* first = new Node();
-	Node* second = new Node();
+void Node::setClosests(vector<Node*> nodes){
+	//if(this->firstClosest==NULL)
+	this->firstClosest = new Node();
+	//if(this->secondClosest==NULL)
+	this->secondClosest = new Node();
+
 	Node* tmp = new Node();
 	for(int i=0; i<nodes.size();i++){
-		if(n->distanceWith(second) < n->distanceWith(nodes[i])){
-			second=nodes[i];
-			if(n->distanceWith(first) < n->distanceWith(second)){
-				tmp = first;
-				first = second;
-				second = tmp;
+		if(this->distanceWith(this->secondClosest) < this->distanceWith(nodes[i])){
+			secondClosest=nodes[i];
+			if(this->distanceWith(this->firstClosest) < this->distanceWith(this->secondClosest)){
+				tmp = this->firstClosest;
+				this->firstClosest = this->secondClosest;
+				this->secondClosest = tmp;
 			}
 		}
-	}*/
+	}
+	vector<Node*> firstsNodes;
+	firstsNodes.push_back(this->firstClosest);
+	firstsNodes.push_back(this->secondClosest);
+}
+
+Node* Node::getClosest(int index){
+	if(index == 0) return firstClosest;
+	else return secondClosest;
+}
+
+void Node::addError(int d){
+	this->_error += d;
+}
+
+Node* findNode(vector<Node*> nodes, int x, int y){
+	if(nodes.empty()) return (new Node());
+	for(int i =0; i<nodes.size();i++){
+		if(nodes[i]->getX() == x && nodes[i]->getY() == y) return nodes[i];
+	}
+	return (new Node(x,y));
 }

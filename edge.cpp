@@ -16,3 +16,16 @@ Edge::Edge(Node* n1, Node* n2, int age){
 Edge::~Edge(){
 
 }
+
+void Edge::addAge(int a){
+	_age += a;
+}
+
+int Edge::getAge(){
+	return this->_age;
+}
+
+Node* Edge::getNode(int index){
+	if(index == 0) return _n1;
+	else return _n2;
+}
