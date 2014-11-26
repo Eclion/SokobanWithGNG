@@ -18,20 +18,21 @@ class Node
 		virtual ~Node();
 		Node* maxErrorNeighbour();
 		Node & operator= (const Node & other);
-		int getX();
-		int getY();
+		float getX();
+		float getY();
 		float getError();
 		void addEdge(Edge* e);
-		int distanceWith(Node* n);
+		float distanceWith(Node* n);
 		void setClosests(vector<Node*> nodes);
 		Node* getClosest(int index);
 		void addError(int d);
 		Node* getNeighbourNode(Edge* e);
+		void moveForward(Node* n, float coef);
+		vector<Edge*> _edges;
 
 	private:
-		int _x,_y;
+		float _x,_y;
 		float _error;
-		vector<Edge*> _edges;
 		Node* firstClosest;
 		Node* secondClosest;
 };

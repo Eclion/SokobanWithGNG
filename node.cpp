@@ -45,11 +45,11 @@ void Node::addEdge(Edge* e){
 	this->_edges.push_back(e);
 }
 
-int Node::getX(){
+float Node::getX(){
 	return this->_x;
 }
 
-int Node::getY(){
+float Node::getY(){
 	return this->_y;
 }
 
@@ -69,13 +69,12 @@ Node & Node::operator= (const Node & other){
 }
 
 Node* between(Node* n1, Node* n2){
-	cout<<"n1->x = "<<n1->getX()<<endl;
 	return new Node((n1->getX()+n2->getX())/2,
 			(n1->getY()+n2->getY())/2,
 			0);
 }
 
-int Node::distanceWith(Node* n){
+float Node::distanceWith(Node* n){
 	int d = sqrt(pow(this->getX()-n->getX(),2) + pow(this->getY()-n->getY(),2));
 	return d;
 }
@@ -97,6 +96,11 @@ void Node::setClosests(vector<Node*> nodes){
 	}
 }
 
+void Node::moveForward(Node* n, float coef){
+	this->_x += (n->getX()-this->_x)*coef;
+	this->_y += (n->getY()-this->_y)*coef;
+}
+
 Node* Node::getClosest(int index){
 	if(index == 0) return firstClosest;
 	else return secondClosest;
@@ -110,7 +114,7 @@ void Node::addError(int d){
 Node* findNode(vector<Node*> nodes, int x, int y){
 	if(nodes.empty())return (new Node());
 	for(int i =0; i<nodes.size();i++){
-		if(nodes[i]->getX() == x && nodes[i]->getY() == y)return nodes[i];
+		if(round(nodes[i]->getX()) == x && round(nodes[i]->getY()) == y)return nodes[i];
 	}
 	return (new Node(x,y));
 }

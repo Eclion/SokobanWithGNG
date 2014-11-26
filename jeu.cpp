@@ -11,6 +11,7 @@ Rôle : fonctions du jeu.
 #include <stdio.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include <math.h>
 
 #include "constantes.h"
 #include "jeu.h"
@@ -174,21 +175,35 @@ void jouer(SDL_Surface* ecran)
 
 		//drawLine(ecran,mx,my,LARGEUR_FENETRE/2,HAUTEUR_FENETRE/2);
 		//drawPoint(ecran,LARGEUR_FENETRE/2,HAUTEUR_FENETRE/2,10);
+		float x0pt=0,x1pt=0,y0pt=0,y1pt=0;
+
+
+
 		if(!_nodes.empty()){
 			for(int i =0; i<_nodes.size();i++){
+				x0pt = NB_BLOCS_LARGEUR + 1 + round(_nodes[i]->getX())+0.5;
+				y0pt = round(_nodes[i]->getY())+0.5;
 				drawPoint(ecran,
-						(NB_BLOCS_LARGEUR + 1 + _nodes[i]->getX()+0.5)*TAILLE_BLOC,
-						(_nodes[i]->getY()+0.5)*TAILLE_BLOC,
+						x0pt*TAILLE_BLOC,
+						y0pt*TAILLE_BLOC,
 						9);
 			}
 		}
 		if(!_edges.empty()){
 			for(int i =0; i<_edges.size();i++){
+				x0pt = NB_BLOCS_LARGEUR + 1 + round(_edges[i]->getNode(0)->getX())+0.5;
+				y0pt = round(_edges[i]->getNode(0)->getY())+0.5;
+				x1pt = NB_BLOCS_LARGEUR + 1 + round(_edges[i]->getNode(1)->getX())+0.5;
+				y1pt = round(_edges[i]->getNode(1)->getY())+0.5;
 				drawLine(ecran,
-						(NB_BLOCS_LARGEUR + 1 + _edges[i]->getNode(0)->getX()+0.5)*TAILLE_BLOC,
+						/*(NB_BLOCS_LARGEUR + 1 + _edges[i]->getNode(0)->getX()+0.5)*TAILLE_BLOC,
 						(_edges[i]->getNode(0)->getY()+0.5)*TAILLE_BLOC,
 						(NB_BLOCS_LARGEUR + 1 + _edges[i]->getNode(1)->getX()+0.5)*TAILLE_BLOC,
-						(_edges[i]->getNode(1)->getY()+0.5)*TAILLE_BLOC,
+						(_edges[i]->getNode(1)->getY()+0.5)*TAILLE_BLOC,*/
+						x0pt*TAILLE_BLOC,
+						y0pt*TAILLE_BLOC,
+						x1pt*TAILLE_BLOC,
+						y1pt*TAILLE_BLOC,
 						9);
 			}
 		}
@@ -305,8 +320,8 @@ void deplacerCaisse(int *premiereCase, int *secondeCase)
 }
 
 void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
-	//Node* currentNode = new Node(pos->x,pos->y);
-	Node* currentNode = findNode(nodes,pos->x,pos->y);
+	Node* currentNode = new Node(pos->x,pos->y);
+	//Node* currentNode = findNode(nodes,pos->x,pos->y);
 	
 
 	if(nodes.empty())nodes.push_back(currentNode);
@@ -320,14 +335,19 @@ void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
 		//cout<<"second->y = "<<currentNode->getClosest(1)->getY() <<endl;
 		edges.push_back(new Edge(currentNode->getClosest(0),currentNode->getClosest(1)));
 		currentNode->getClosest(0)->addError(currentNode->distanceWith(currentNode->getClosest(0)));
-		cout<<currentNode->getClosest(0)->getError()<<endl;
+		//cout<<currentNode->getClosest(0)->getError()<<endl;
+		
 		//	Attract first toward (x,y)
+		currentNode->getClosest(0)->moveForward(currentNode,0.03);
 
 		for(int i = 0; i< edges.size();i++){
 			edges[i]->addAge(1);
 			if(edges[i]->getAge() > MAX_AGE) edges.erase(edges.begin()+i);
 		}
 		// Attract neighbours(first) toward (x,y)
+		for(int i=0; i< currentNode->getClosest(0)->_edges.size(); i++ ){
+			currentNode->getClosest(0)->getNeighbourNode(currentNode->getClosest(0)->_edges[i])->moveForward(currentNode,0.006);
+		}
 
 		for(int i =0; i< nodes.size();i++){
 			nodes[i]->addError(-ERROR_DECAY);
@@ -335,13 +355,14 @@ void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
 
 		if(currentNode->getClosest(0)->getError() > MAX_ERROR){
 			Node* maxErrNei = currentNode->maxErrorNeighbour();
-			//Node* newN = new Node(pos->x,pos->y);//between(currentNode->getClosest(0),maxErrNei);
+			Node* newN = new Node(pos->x,pos->y);//between(currentNode->getClosest(0),maxErrNei);
 			currentNode->getClosest(0)->addError(-currentNode->getClosest(0)->getError()/2);
 			maxErrNei->addError(-maxErrNei->getError()/2);
 			float newError = currentNode->getClosest(0)->getError()+maxErrNei->getError();
-			//newN->addError(newError);
-			currentNode->addError(newError);
-			nodes.push_back(currentNode);
+			newN->addError(newError);
+			//currentNode->addError(newError);
+			//nodes.push_back(currentNode);
+			nodes.push_back(newN);
 			/**/
 		}
 	}
