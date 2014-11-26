@@ -1,9 +1,8 @@
 #ifndef DEF_EDGE
 #define DEF_EDGE
 
-#include "node.h"
-
 using namespace std;
+class Node;
 
 class Edge
 {
@@ -17,6 +16,7 @@ class Edge
 
 	private:
 		int _age;
+		float _distance;
 		Node* _n1;
 		Node* _n2;
 

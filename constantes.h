@@ -15,9 +15,9 @@ Rôle : définit des constantes communes à tout le programme (taille de la fenêtre
     #define NB_BLOCS_HAUTEUR    18
     #define LARGEUR_FENETRE     TAILLE_BLOC * (NB_BLOCS_LARGEUR*2+1)
     #define HAUTEUR_FENETRE     TAILLE_BLOC * NB_BLOCS_HAUTEUR
-	#define MAX_AGE				75      //a def plus tard
-	#define MAX_ERROR			20000	//a def plus tard
-	#define ERROR_DECAY			10	    //a def plus tard
+	#define MAX_AGE				100      //a def plus tard
+	#define MAX_ERROR			3	//a def plus tard
+	#define ERROR_DECAY			1	    //a def plus tard
 
 
     enum {HAUT, BAS, GAUCHE, DROITE};

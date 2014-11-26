@@ -7,6 +7,8 @@
 
 using namespace std;
 
+class Edge;
+
 class Node
 {
 	public:
@@ -19,16 +21,17 @@ class Node
 		int getX();
 		int getY();
 		float getError();
-		void addNeigbour(Node* n);
+		void addEdge(Edge* e);
 		int distanceWith(Node* n);
 		void setClosests(vector<Node*> nodes);
 		Node* getClosest(int index);
 		void addError(int d);
+		Node* getNeighbourNode(Edge* e);
 
 	private:
 		int _x,_y;
 		float _error;
-		vector<Node*> neighbours;
+		vector<Edge*> _edges;
 		Node* firstClosest;
 		Node* secondClosest;
 };

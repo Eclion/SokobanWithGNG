@@ -1,6 +1,7 @@
 #include "node.h"
-
+#include "edge.h"
 #include <vector>
+#include <math.h>
 #include <iostream>
 
 /*Node::Node(){
@@ -24,21 +25,24 @@ Node::~Node(){
 }
 
 Node* Node::maxErrorNeighbour(){
-	int maxErrorNeighbourIndex = 0;
-	if(neighbours.empty()){
-		cout<<"vide"<<endl;
-		return (new Node());
-	}
-	for(int i=0; i < neighbours.size(); i++){
-		if(neighbours[maxErrorNeighbourIndex]->getError() < neighbours[i]->getError()){
-			maxErrorNeighbourIndex = i;
+	if(_edges.empty()) return (this);
+	Node* _maxErrorNeighbour= getNeighbourNode(_edges[0]);
+	for(int i=1; i < _edges.size(); i++){
+		if(getNeighbourNode(_edges[i])->getError() > _maxErrorNeighbour->getError()){
+			_maxErrorNeighbour = getNeighbourNode(_edges[i]);
 		}
 	}
-	return neighbours[maxErrorNeighbourIndex];
+
+	return _maxErrorNeighbour;
 }
 
-void Node::addNeigbour(Node* n){
-	this->neighbours.push_back(n);
+Node* Node::getNeighbourNode(Edge* e){
+	if(this->getX()==e->getNode(0)->getX() && this->getY()==e->getNode(0)->getY()) return e->getNode(1);
+	else return e->getNode(0);
+}
+
+void Node::addEdge(Edge* e){
+	this->_edges.push_back(e);
 }
 
 int Node::getX(){
@@ -65,13 +69,14 @@ Node & Node::operator= (const Node & other){
 }
 
 Node* between(Node* n1, Node* n2){
+	cout<<"n1->x = "<<n1->getX()<<endl;
 	return new Node((n1->getX()+n2->getX())/2,
 			(n1->getY()+n2->getY())/2,
 			0);
 }
 
 int Node::distanceWith(Node* n){
-	int d = ((this->getX() - n->getX())*(this->getX() - n->getX()) + (this->getY() - n->getY())*(this->getY() - n->getY()));
+	int d = sqrt(pow(this->getX()-n->getX(),2) + pow(this->getY()-n->getY(),2));
 	return d;
 }
 
@@ -80,21 +85,16 @@ void Node::setClosests(vector<Node*> nodes){
 	this->firstClosest = new Node();
 	//if(this->secondClosest==NULL)
 	this->secondClosest = new Node();
-
-	Node* tmp = new Node();
+	//cout<<"nodes size = " << nodes.size() << endl;
 	for(int i=0; i<nodes.size();i++){
-		if(this->distanceWith(this->secondClosest) < this->distanceWith(nodes[i])){
-			secondClosest=nodes[i];
-			if(this->distanceWith(this->firstClosest) < this->distanceWith(this->secondClosest)){
-				tmp = this->firstClosest;
-				this->firstClosest = this->secondClosest;
-				this->secondClosest = tmp;
-			}
+		if(this->distanceWith(nodes[i])==0) continue;
+		if(this->distanceWith(this->firstClosest) > this->distanceWith(nodes[i])){
+			this->secondClosest=this->firstClosest;
+			this->firstClosest=nodes[i];
+		}else if(this->distanceWith(this->secondClosest) > this->distanceWith(nodes[i])){
+			this->secondClosest = nodes[i];
 		}
 	}
-	vector<Node*> firstsNodes;
-	firstsNodes.push_back(this->firstClosest);
-	firstsNodes.push_back(this->secondClosest);
 }
 
 Node* Node::getClosest(int index){
@@ -104,12 +104,13 @@ Node* Node::getClosest(int index){
 
 void Node::addError(int d){
 	this->_error += d;
+	if(this->_error < 0) this->_error = 0;
 }
 
 Node* findNode(vector<Node*> nodes, int x, int y){
-	if(nodes.empty()) return (new Node());
+	if(nodes.empty())return (new Node());
 	for(int i =0; i<nodes.size();i++){
-		if(nodes[i]->getX() == x && nodes[i]->getY() == y) return nodes[i];
+		if(nodes[i]->getX() == x && nodes[i]->getY() == y)return nodes[i];
 	}
 	return (new Node(x,y));
 }

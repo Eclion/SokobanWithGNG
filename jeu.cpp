@@ -67,6 +67,7 @@ void jouer(SDL_Surface* ecran)
 		}
 	}
 
+	_nodes.push_back(new Node(positionJoueur.x,positionJoueur.y));
 	// Activation de la répétition des touches
 	SDL_EnableKeyRepeat(100, 100);
 
@@ -304,42 +305,44 @@ void deplacerCaisse(int *premiereCase, int *secondeCase)
 }
 
 void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
-	//Node* newNode = new Node(pos->x,pos->y);
-	Node* newNode = findNode(nodes,pos->x,pos->y);
+	//Node* currentNode = new Node(pos->x,pos->y);
+	Node* currentNode = findNode(nodes,pos->x,pos->y);
+	
 
-	//chercher la correspondace avec les autres nodes
-
-	if(nodes.empty()) nodes.push_back(newNode);
+	if(nodes.empty())nodes.push_back(currentNode);
 	else if(nodes.size() == 1){
-		nodes.push_back(newNode);
+		nodes.push_back(currentNode);
 		edges.push_back(new Edge(nodes[0],nodes[1]));
 	}
 	else{
-		newNode->setClosests(nodes);
-		edges.push_back(new Edge(newNode->getClosest(0),newNode->getClosest(1)));
-		newNode->getClosest(0)->addError(newNode->distanceWith(newNode->getClosest(0)));
-		
+		currentNode->setClosests(nodes);
+		//cout<<"first->y = "<<currentNode->getClosest(0)->getY() <<endl;
+		//cout<<"second->y = "<<currentNode->getClosest(1)->getY() <<endl;
+		edges.push_back(new Edge(currentNode->getClosest(0),currentNode->getClosest(1)));
+		currentNode->getClosest(0)->addError(currentNode->distanceWith(currentNode->getClosest(0)));
+		cout<<currentNode->getClosest(0)->getError()<<endl;
 		//	Attract first toward (x,y)
 
 		for(int i = 0; i< edges.size();i++){
 			edges[i]->addAge(1);
 			if(edges[i]->getAge() > MAX_AGE) edges.erase(edges.begin()+i);
 		}
-
 		// Attract neighbours(first) toward (x,y)
 
 		for(int i =0; i< nodes.size();i++){
 			nodes[i]->addError(-ERROR_DECAY);
 		}
 
-		if(newNode->getClosest(0)->getError() > MAX_ERROR){
-			Node* maxErrNei = newNode->maxErrorNeighbour();
-			/*Node* newN = between(newNode->getClosest(0),maxErrNei);
-			newNode->getClosest(0)->addError(-newNode->getClosest(0)->getError()/2);
+		if(currentNode->getClosest(0)->getError() > MAX_ERROR){
+			Node* maxErrNei = currentNode->maxErrorNeighbour();
+			//Node* newN = new Node(pos->x,pos->y);//between(currentNode->getClosest(0),maxErrNei);
+			currentNode->getClosest(0)->addError(-currentNode->getClosest(0)->getError()/2);
 			maxErrNei->addError(-maxErrNei->getError()/2);
-			float newError = newNode->getClosest(0)->getError()+maxErrNei->getError();
-			newN->addError(newError);
-			nodes.push_back(newN);/**/
+			float newError = currentNode->getClosest(0)->getError()+maxErrNei->getError();
+			//newN->addError(newError);
+			currentNode->addError(newError);
+			nodes.push_back(currentNode);
+			/**/
 		}
 	}
 }
