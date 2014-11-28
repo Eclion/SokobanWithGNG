@@ -89,23 +89,19 @@ void jouer(SDL_Surface* ecran)
 						break;
 					case SDLK_UP:
 						marioActuel = mario[HAUT];
-						deplacerJoueur(carte, &positionJoueur, HAUT);
-						updateGNG(&positionJoueur, _nodes, _edges);
+						if(deplacerJoueur(carte, &positionJoueur, HAUT)) updateGNG(&positionJoueur, _nodes, _edges, carte);
 						break;
 					case SDLK_DOWN:
 						marioActuel = mario[BAS];
-						deplacerJoueur(carte, &positionJoueur, BAS);
-						updateGNG(&positionJoueur, _nodes, _edges);
+						if (deplacerJoueur(carte, &positionJoueur, BAS)) updateGNG(&positionJoueur, _nodes, _edges, carte);
 						break;
 					case SDLK_RIGHT:
 						marioActuel = mario[DROITE];
-						deplacerJoueur(carte, &positionJoueur, DROITE);
-						updateGNG(&positionJoueur, _nodes, _edges);
+						if(deplacerJoueur(carte, &positionJoueur, DROITE)) updateGNG(&positionJoueur, _nodes, _edges, carte);
 						break;
 					case SDLK_LEFT:
 						marioActuel = mario[GAUCHE];
-						deplacerJoueur(carte, &positionJoueur, GAUCHE);
-						updateGNG(&positionJoueur, _nodes, _edges);
+						if(deplacerJoueur(carte, &positionJoueur, GAUCHE)) updateGNG(&positionJoueur, _nodes, _edges, carte);
 						break;
 					default:
 						break;
@@ -224,8 +220,9 @@ void jouer(SDL_Surface* ecran)
 		SDL_FreeSurface(mario[i]);
 }
 
-void deplacerJoueur(int carte[][NB_BLOCS_HAUTEUR], SDL_Rect *pos, int direction)
+bool deplacerJoueur(int carte[][NB_BLOCS_HAUTEUR], SDL_Rect *pos, int direction)
 {
+	bool moved = false;
 	switch(direction)
 	{
 		case HAUT:
@@ -244,6 +241,7 @@ void deplacerJoueur(int carte[][NB_BLOCS_HAUTEUR], SDL_Rect *pos, int direction)
 			deplacerCaisse(&carte[pos->x][pos->y - 1], &carte[pos->x][pos->y - 2]);
 
 			pos->y--; // On peut enfin faire monter le joueur (oufff !)
+			moved = true;
 			break;
 
 
@@ -262,6 +260,7 @@ void deplacerJoueur(int carte[][NB_BLOCS_HAUTEUR], SDL_Rect *pos, int direction)
 			deplacerCaisse(&carte[pos->x][pos->y + 1], &carte[pos->x][pos->y + 2]);
 
 			pos->y++;
+			moved = true;
 			break;
 
 
@@ -280,6 +279,7 @@ void deplacerJoueur(int carte[][NB_BLOCS_HAUTEUR], SDL_Rect *pos, int direction)
 			deplacerCaisse(&carte[pos->x - 1][pos->y], &carte[pos->x - 2][pos->y]);
 
 			pos->x--;
+			moved = true;
 			break;
 
 
@@ -297,10 +297,12 @@ void deplacerJoueur(int carte[][NB_BLOCS_HAUTEUR], SDL_Rect *pos, int direction)
 			deplacerCaisse(&carte[pos->x + 1][pos->y], &carte[pos->x + 2][pos->y]);
 
 			pos->x++;
+			moved = true;
 			break;
 		default:
 			break;
 	}
+	return moved;
 }
 
 void deplacerCaisse(int *premiereCase, int *secondeCase)
@@ -319,7 +321,7 @@ void deplacerCaisse(int *premiereCase, int *secondeCase)
 	}
 }
 
-void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
+void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges, int carte[][NB_BLOCS_HAUTEUR]){
 	Node* currentNode = new Node(pos->x,pos->y);
 	//Node* currentNode = findNode(nodes,pos->x,pos->y);
 	
@@ -338,7 +340,14 @@ void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
 		//cout<<currentNode->getClosest(0)->getError()<<endl;
 		
 		//	Attract first toward (x,y)
-		currentNode->getClosest(0)->moveForward(currentNode,0.03);
+		int nextX = round(currentNode->getX()*0.03f+currentNode->getClosest(0)->getX()*0.97f);
+		int nextY = round(currentNode->getY()*0.03f+currentNode->getClosest(0)->getY()*0.97f);
+
+		if(nextX >= 0 && nextX <= NB_BLOCS_LARGEUR && nextY >= 0 && nextY <= NB_BLOCS_HAUTEUR){
+			if(carte[nextX][nextY]!=MUR) currentNode->getClosest(0)->moveForward(currentNode,0.03);	
+		}
+
+		nextX = nextY = 0;
 
 		for(int i = 0; i< edges.size();i++){
 			edges[i]->addAge(1);
@@ -346,7 +355,13 @@ void updateGNG(SDL_Rect *pos, vector<Node*> &nodes, vector<Edge*> &edges){
 		}
 		// Attract neighbours(first) toward (x,y)
 		for(int i=0; i< currentNode->getClosest(0)->_edges.size(); i++ ){
-			currentNode->getClosest(0)->getNeighbourNode(currentNode->getClosest(0)->_edges[i])->moveForward(currentNode,0.006);
+			nextX = round(currentNode->getX()*0.006f+currentNode->getClosest(0)->getNeighbourNode(currentNode->getClosest(0)->_edges[i])->getX()*0.994f);
+			nextY = round(currentNode->getY()*0.006f+currentNode->getClosest(0)->getNeighbourNode(currentNode->getClosest(0)->_edges[i])->getY()*0.994f);
+
+			if(nextX >= 0 && nextX <= NB_BLOCS_LARGEUR && nextY >= 0 && nextY <= NB_BLOCS_HAUTEUR){
+				if(carte[nextX][nextY]!=MUR) currentNode->getClosest(0)->getNeighbourNode(currentNode->getClosest(0)->_edges[i])->moveForward(currentNode,0.006);;	
+			}
+			nextX = nextY = 0;				
 		}
 
 		for(int i =0; i< nodes.size();i++){
